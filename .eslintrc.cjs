@@ -62,8 +62,8 @@ module.exports = {
               ['module', { moduleName: '!${from.moduleName}' }],
             ],
           },
-          // core can only import shared
-          { from: 'core', allow: ['shared'] },
+          // core can import shared and other core files (never modules)
+          { from: 'core', allow: ['shared', 'core'] },
           // frontend features can import shared app utilities and other features
           { from: 'feature', allow: ['shared', 'app-shared', 'feature'] },
           // app-shared can import shared package

@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY shared/package.json ./shared/
+COPY backend/package.json ./backend/
+
+RUN npm pkg delete scripts.prepare && npm ci --workspace=shared --workspace=backend
+
+COPY tsconfig.base.json ./
+COPY shared/tsconfig.json ./shared/
+COPY shared/src ./shared/src
+COPY backend/tsconfig.json ./backend/
+
+WORKDIR /app/backend
+
+CMD ["npm", "run", "dev"]
