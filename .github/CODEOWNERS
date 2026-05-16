@@ -1,0 +1,11 @@
+# Default owner for all files
+* @michaelpaulquimson
+
+# Shared package changes require extra scrutiny (schema drift impacts all workspaces)
+/shared/ @michaelpaulquimson
+
+# Backend core infrastructure
+/backend/src/core/ @michaelpaulquimson
+
+# DB migrations are irreversible — require owner review
+/backend/src/core/db/migrations/ @michaelpaulquimson
