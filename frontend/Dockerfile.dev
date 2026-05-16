@@ -1,0 +1,16 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+COPY shared/package.json ./shared/
+COPY frontend/package.json ./frontend/
+RUN npm pkg delete scripts.prepare && npm ci --workspace=shared --workspace=frontend
+COPY tsconfig.base.json ./
+COPY shared/tsconfig.json ./shared/
+COPY shared/src ./shared/src
+COPY frontend/tsconfig.json ./frontend/
+COPY frontend/vite.config.ts ./frontend/
+COPY frontend/tailwind.config.js ./frontend/
+COPY frontend/postcss.config.js ./frontend/
+COPY frontend/index.html ./frontend/
+WORKDIR /app/frontend
+CMD ["npm", "run", "dev"]

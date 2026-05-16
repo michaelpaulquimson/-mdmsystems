@@ -5,7 +5,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: ['./shared/tsconfig.json', './backend/tsconfig.json', './backend/tsconfig.test.json'],
+    project: ['./shared/tsconfig.json', './backend/tsconfig.json', './backend/tsconfig.test.json', './frontend/tsconfig.json'],
   },
   plugins: ['@typescript-eslint', 'import', 'boundaries'],
   extends: [
@@ -66,8 +66,8 @@ module.exports = {
           { from: 'core', allow: ['shared', 'core'] },
           // frontend features can import shared app utilities and other features
           { from: 'feature', allow: ['shared', 'app-shared', 'feature'] },
-          // app-shared can import shared package
-          { from: 'app-shared', allow: ['shared'] },
+          // app-shared can import shared package and other app-shared (e.g. ui → lib/utils)
+          { from: 'app-shared', allow: ['shared', 'app-shared'] },
         ],
       },
     ],
