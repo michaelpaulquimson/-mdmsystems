@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment — never commit real secrets
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Docker volumes (if created locally outside compose)
+postgres_data/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Compiled shared (workspaces link the src directly in dev)
+shared/dist/
