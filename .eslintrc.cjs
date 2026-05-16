@@ -5,7 +5,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: ['./shared/tsconfig.json', './backend/tsconfig.json'],
+    project: ['./shared/tsconfig.json', './backend/tsconfig.json', './backend/tsconfig.test.json'],
   },
   plugins: ['@typescript-eslint', 'import', 'boundaries'],
   extends: [
@@ -85,6 +85,12 @@ module.exports = {
       files: ['**/*.cjs', '**/*.mjs'],
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
+        'import/no-default-export': 'off',
+      },
+    },
+    {
+      files: ['**/*.config.ts', '**/*.config.js'],
+      rules: {
         'import/no-default-export': 'off',
       },
     },
