@@ -110,11 +110,18 @@ export class ContentService implements IContentService {
       const before = await this.contentRepo.findById(id, tx);
       if (!before) throw new NotFoundError('ContentItem');
 
-      if (!actor.isAdmin && before.organizationId !== actor.organizationId) {
-        throw new NotFoundError('ContentItem');
+      let organizationId: string;
+      if (actor.isAdmin) {
+        organizationId = before.organizationId;
+      } else {
+        if (!actor.organizationId) {
+          throw new ForbiddenError('User is not associated with an organization');
+        }
+        if (before.organizationId !== actor.organizationId) {
+          throw new NotFoundError('ContentItem');
+        }
+        organizationId = actor.organizationId;
       }
-
-      const organizationId = actor.isAdmin ? before.organizationId : actor.organizationId!;
       const item = await this.contentRepo.update(id, input, organizationId, tx);
       if (!item) throw new NotFoundError('ContentItem');
 

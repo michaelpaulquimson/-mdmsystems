@@ -27,13 +27,19 @@ export class TeamService implements ITeamService {
     private readonly auditService: AuditService,
   ) {}
 
-  async list(_actor: AuthUser, filters: ListFilters): Promise<Paginated<Team>> {
-    return this.repo.findAll(filters);
+  async list(actor: AuthUser, filters: ListFilters): Promise<Paginated<Team>> {
+    const scopedFilters = actor.isAdmin
+      ? filters
+      : { ...filters, organizationId: actor.organizationId ?? undefined };
+    return this.repo.findAll(scopedFilters);
   }
 
-  async get(id: string, _actor: AuthUser): Promise<Team> {
+  async get(id: string, actor: AuthUser): Promise<Team> {
     const team = await this.repo.findById(id);
     if (!team) throw new NotFoundError('Team');
+    if (!actor.isAdmin && team.organizationId !== actor.organizationId) {
+      throw new NotFoundError('Team');
+    }
     return team;
   }
 
@@ -64,6 +70,9 @@ export class TeamService implements ITeamService {
     return this.repo.withTransaction(async (tx) => {
       const before = await this.repo.findById(id, tx);
       if (!before) throw new NotFoundError('Team');
+      if (!actor.isAdmin && before.organizationId !== actor.organizationId) {
+        throw new NotFoundError('Team');
+      }
 
       if (input.organizationId) {
         const org = await this.orgRepo.findById(input.organizationId, tx);
@@ -93,6 +102,9 @@ export class TeamService implements ITeamService {
     return this.repo.withTransaction(async (tx) => {
       const before = await this.repo.findById(id, tx);
       if (!before) throw new NotFoundError('Team');
+      if (!actor.isAdmin && before.organizationId !== actor.organizationId) {
+        throw new NotFoundError('Team');
+      }
 
       await this.repo.deleteById(id, tx);
       await this.auditService.record(

@@ -25,11 +25,22 @@ export class OrganizationService implements IOrganizationService {
     private readonly auditService: AuditService,
   ) {}
 
-  async list(_actor: AuthUser, filters: ListFilters): Promise<Paginated<Organization>> {
+  async list(actor: AuthUser, filters: ListFilters): Promise<Paginated<Organization>> {
+    if (!actor.isAdmin && actor.organizationId) {
+      // Non-admins can only see their own organization
+      const org = await this.repo.findById(actor.organizationId);
+      return {
+        data: org ? [org] : [],
+        pagination: { total: org ? 1 : 0, limit: 1, offset: 0 },
+      };
+    }
     return this.repo.findAll(filters);
   }
 
-  async get(id: string, _actor: AuthUser): Promise<Organization> {
+  async get(id: string, actor: AuthUser): Promise<Organization> {
+    if (!actor.isAdmin && id !== actor.organizationId) {
+      throw new NotFoundError('Organization');
+    }
     const org = await this.repo.findById(id);
     if (!org) throw new NotFoundError('Organization');
     return org;
