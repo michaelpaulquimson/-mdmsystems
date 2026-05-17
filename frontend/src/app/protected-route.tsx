@@ -22,7 +22,7 @@ export function ProtectedRoute({
   }
 
   // If requireAdmin and user is not an admin, redirect to 403
-  if (requireAdmin && isAuthenticated && !isAdmin) {
+  if (requireAdmin && !isAdmin) {
     return <Navigate to="/403" replace />;
   }
 

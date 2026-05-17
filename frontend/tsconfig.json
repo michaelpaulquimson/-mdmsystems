@@ -7,10 +7,9 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "outDir": "dist",
-    "baseUrl": ".",
     "paths": {
       "@mdm/shared": ["../shared/src/index.ts"],
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "noEmit": true,
     "allowImportingTsExtensions": true

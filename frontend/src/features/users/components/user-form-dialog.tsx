@@ -56,6 +56,7 @@ export function UserFormDialog({
     defaultValues: {
       name: user?.name ?? '',
       email: user?.email ?? '',
+      isAdmin: user?.isAdmin ?? false,
       organizationId: user?.organizationId ?? undefined,
       teamId: user?.teamId ?? undefined,
       roleId: user?.roleId ?? undefined,
@@ -69,6 +70,7 @@ export function UserFormDialog({
       reset({
         name: user?.name ?? '',
         email: user?.email ?? '',
+        isAdmin: user?.isAdmin ?? false,
         organizationId: user?.organizationId ?? undefined,
         teamId: user?.teamId ?? undefined,
         roleId: user?.roleId ?? undefined,
@@ -260,6 +262,20 @@ export function UserFormDialog({
             )}
           />
           {errors.roleId && <p className="text-sm text-destructive">{errors.roleId.message}</p>}
+        </div>
+
+        {/* Administrator */}
+        <div className="flex items-center gap-2">
+          <input
+            id="user-is-admin"
+            type="checkbox"
+            className="h-4 w-4 cursor-pointer rounded border border-input"
+            disabled={isPending}
+            {...register('isAdmin')}
+          />
+          <Label htmlFor="user-is-admin" className="cursor-pointer font-normal">
+            Administrator
+          </Label>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
