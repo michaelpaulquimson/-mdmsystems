@@ -23,8 +23,11 @@ export abstract class BaseRepository<TDomain, TRow> {
 
   async findAll(filters: ListFilters, client?: PoolClient): Promise<Paginated<TDomain>> {
     const db = client ?? this.pool;
-    const limit = Math.min(filters.limit ?? 50, 200);
-    const offset = filters.offset ?? 0;
+    const rawLimit = filters.limit;
+    const rawOffset = filters.offset;
+    const limit = Math.min(Number.isFinite(rawLimit) ? (rawLimit as number) : 50, 200);
+    const offset =
+      Number.isFinite(rawOffset) && (rawOffset as number) >= 0 ? (rawOffset as number) : 0;
 
     const { rows } = await db.query(
       `SELECT * FROM ${this.table} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,

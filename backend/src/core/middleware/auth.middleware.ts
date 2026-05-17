@@ -1,9 +1,14 @@
+import { AuthUserSchema } from '@mdm/shared';
 import type { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { z } from 'zod';
 
 import { env } from '../config/env.js';
 import { ForbiddenError, UnauthorizedError } from '../errors/http-errors.js';
-import type { AuthenticatedUser } from '../types/express.js';
+
+const JwtPayloadSchema = AuthUserSchema.extend({
+  permissions: z.array(z.string()),
+});
 
 export function authRequired(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
@@ -13,10 +18,9 @@ export function authRequired(req: Request, _res: Response, next: NextFunction): 
 
   try {
     const token = header.slice(7);
-    const payload = jwt.verify(token, env.JWT_SECRET, {
-      algorithms: ['HS256'],
-    }) as AuthenticatedUser;
-    req.user = payload;
+    const raw = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
+    const parsed = JwtPayloadSchema.parse(raw);
+    req.user = parsed;
     next();
   } catch {
     throw new UnauthorizedError('Invalid or expired access token');

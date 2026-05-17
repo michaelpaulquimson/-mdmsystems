@@ -160,6 +160,21 @@ export class AuthService implements IAuthService {
       const payload = buildTokenPayload(userRecord, permissions);
       const accessToken = signAccessToken(payload);
 
+      await this.auditService.record(
+        {
+          actorUserId: userRecord.id,
+          action: 'token-refreshed',
+          entityType: 'refresh_token',
+          entityId: tokenRow.id,
+          organizationId: userRecord.organizationId,
+          before: null,
+          after: null,
+          ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
+          ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
+        },
+        tx,
+      );
+
       return { accessToken, refreshToken: newRawToken };
     });
   }
@@ -167,7 +182,7 @@ export class AuthService implements IAuthService {
   async logout(refreshToken: string, actor: AuthUser, ctx: LoginContext): Promise<void> {
     const hash = hashToken(refreshToken);
     const tokenRow = await this.refreshTokenRepo.findByHash(hash);
-    if (tokenRow) {
+    if (tokenRow && tokenRow.user_id === actor.id) {
       await this.refreshTokenRepo.revoke(tokenRow.id);
     }
 

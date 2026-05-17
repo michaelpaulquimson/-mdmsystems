@@ -9,14 +9,13 @@ import {
   LayoutDashboard,
 } from 'lucide-react';
 import { type ReactNode } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { apiClient } from '@/shared/api/client';
 import { useAuth } from '@/shared/auth/use-auth';
+import { useLogout } from '@/shared/auth/use-logout';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
-import { useAuthStore } from '@/shared/stores/auth.store';
 
 interface NavItem {
   label: string;
@@ -61,19 +60,7 @@ const navItems: NavItem[] = [
 
 export function AppShell(): JSX.Element {
   const { user, isAdmin } = useAuth();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
-  const navigate = useNavigate();
-
-  async function handleLogout(): Promise<void> {
-    try {
-      await apiClient.post('/api/v1/auth/logout');
-    } catch {
-      // Best-effort logout — clear state regardless
-    } finally {
-      clearAuth();
-      navigate('/login', { replace: true });
-    }
-  }
+  const logout = useLogout();
 
   const visibleNav = navItems.filter((item) => !item.adminOnly || isAdmin);
 
@@ -124,7 +111,7 @@ export function AppShell(): JSX.Element {
             size="sm"
             className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
             onClick={() => {
-              handleLogout().catch(() => {
+              logout().catch(() => {
                 toast.error('Logout failed');
               });
             }}

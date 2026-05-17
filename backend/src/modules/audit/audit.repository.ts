@@ -4,7 +4,14 @@ import { z } from 'zod';
 
 export interface CreateAuditInput {
   actorUserId: string | null;
-  action: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'refresh-reuse-detected';
+  action:
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'login'
+    | 'logout'
+    | 'refresh-reuse-detected'
+    | 'token-refreshed';
   entityType: string;
   entityId: string | null;
   organizationId: string | null;

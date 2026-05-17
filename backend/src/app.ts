@@ -11,6 +11,10 @@ import { logger } from './core/logger/logger.js';
 export function createApp(): express.Application {
   const app = express();
 
+  // Trust the first proxy hop so express-rate-limit keys on the real client IP,
+  // not the Docker/LB gateway IP (which would turn per-IP limits into global caps).
+  app.set('trust proxy', 1);
+
   // ─── Security headers ────────────────────────────────────────────────────────
   // CSP relaxed on /api/v1/docs to allow Swagger UI inline scripts/styles
   app.use((req, res, next) => {
@@ -26,7 +30,7 @@ export function createApp(): express.Application {
     cors({
       origin: (origin, cb) => {
         if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-        cb(new Error(`CORS: ${origin} not allowed`));
+        cb(null, false);
       },
       credentials: true,
     }),

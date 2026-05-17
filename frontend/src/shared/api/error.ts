@@ -2,7 +2,7 @@ import { ErrorCode } from '@mdm/shared';
 import axios from 'axios';
 
 export interface ApiError {
-  code: string;
+  code: ErrorCode;
   message: string;
   details?: unknown;
 }
@@ -18,7 +18,11 @@ export function parseApiError(error: unknown): ApiError {
           ? (data['error'] as Record<string, unknown>)
           : data;
 
-      const code = typeof envelope['code'] === 'string' ? envelope['code'] : ErrorCode.INTERNAL;
+      const rawCode = envelope['code'];
+      const code: ErrorCode =
+        typeof rawCode === 'string' && rawCode in ErrorCode
+          ? (rawCode as ErrorCode)
+          : ErrorCode.INTERNAL;
       const message =
         typeof envelope['message'] === 'string'
           ? envelope['message']
