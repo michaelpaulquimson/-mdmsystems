@@ -116,10 +116,10 @@ export class TeamRepository extends BaseRepository<Team, TeamRow> implements ITe
       organizationId: 'organization_id',
     };
 
-    const fields = Object.entries(input).filter(([, v]) => v !== undefined);
+    const fields = Object.entries(input).filter(([key, v]) => v !== undefined && key in fieldMap);
     if (fields.length === 0) return this.findById(id, client);
 
-    const setClauses = fields.map(([key], i) => `${fieldMap[key] ?? key} = $${i + 1}`);
+    const setClauses = fields.map(([key], i) => `${fieldMap[key]} = $${i + 1}`);
     const values = fields.map(([, v]) => v);
     values.push(id);
 

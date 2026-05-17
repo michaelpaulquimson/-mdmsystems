@@ -19,8 +19,9 @@ export function parseApiError(error: unknown): ApiError {
           : data;
 
       const rawCode = envelope['code'];
+      const knownCodes = Object.values(ErrorCode) as string[];
       const code: ErrorCode =
-        typeof rawCode === 'string' && rawCode in ErrorCode
+        typeof rawCode === 'string' && knownCodes.includes(rawCode)
           ? (rawCode as ErrorCode)
           : ErrorCode.INTERNAL;
       const message =

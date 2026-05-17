@@ -182,21 +182,28 @@ export class AuthService implements IAuthService {
   async logout(refreshToken: string, actor: AuthUser, ctx: LoginContext): Promise<void> {
     const hash = hashToken(refreshToken);
     const tokenRow = await this.refreshTokenRepo.findByHash(hash);
-    if (tokenRow && tokenRow.user_id === actor.id) {
-      await this.refreshTokenRepo.revoke(tokenRow.id);
-    }
 
-    await this.auditService.record({
-      actorUserId: actor.id,
-      action: 'logout',
-      entityType: 'user',
-      entityId: actor.id,
-      organizationId: actor.organizationId,
-      before: null,
-      after: null,
-      ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
-      ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
-    });
+    // Only revoke and audit when the token belongs to the requesting user.
+    // Both operations are in the same transaction so they commit or roll back together.
+    if (tokenRow && tokenRow.user_id === actor.id) {
+      await this.userRepo.withTransaction(async (tx) => {
+        await this.refreshTokenRepo.revoke(tokenRow.id, tx);
+        await this.auditService.record(
+          {
+            actorUserId: actor.id,
+            action: 'logout',
+            entityType: 'user',
+            entityId: actor.id,
+            organizationId: actor.organizationId,
+            before: null,
+            after: null,
+            ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
+            ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
+          },
+          tx,
+        );
+      });
+    }
   }
 
   async me(actor: AuthUser): Promise<AuthUser> {
