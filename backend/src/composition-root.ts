@@ -1,3 +1,4 @@
+import { ErrorCode } from '@mdm/shared';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
@@ -114,7 +115,7 @@ export function buildCompositionRoot(pool: Pool): CompositionRoot {
     if (env.METRICS_TOKEN && _req.headers['x-metrics-token'] !== env.METRICS_TOKEN) {
       res
         .status(401)
-        .json({ error: { code: 'UNAUTHENTICATED', message: 'Invalid metrics token' } });
+        .json({ error: { code: ErrorCode.UNAUTHENTICATED, message: 'Invalid metrics token' } });
       return;
     }
     res.set('Content-Type', promClient.register.contentType);

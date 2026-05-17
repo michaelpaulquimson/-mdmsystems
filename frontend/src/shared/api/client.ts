@@ -21,6 +21,8 @@ apiClient.interceptors.request.use((config) => {
 
 // Single in-flight refresh promise to de-duplicate concurrent 401s
 let refreshPromise: Promise<string> | null = null;
+// Prevent concurrent 401 failures from triggering multiple redirects
+let isRedirectingToLogin = false;
 
 async function refreshAccessToken(): Promise<string> {
   const { refreshToken } = useAuthStore.getState();
@@ -82,7 +84,10 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch {
         useAuthStore.getState().clearAuth();
-        window.location.href = '/login';
+        if (!isRedirectingToLogin && window.location.pathname !== '/login') {
+          isRedirectingToLogin = true;
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
     }

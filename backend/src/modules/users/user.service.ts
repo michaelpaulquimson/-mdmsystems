@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 
 import type { IUserRepository } from './user.repository.js';
 import { env } from '../../core/config/env.js';
-import { NotFoundError } from '../../core/errors/http-errors.js';
+import { ConflictError, NotFoundError } from '../../core/errors/http-errors.js';
 import type { AuditService } from '../audit/audit.service.js';
 import type { IOrganizationRepository } from '../organizations/organization.repository.js';
 import type { IRoleRepository } from '../roles/role.repository.js';
@@ -95,9 +95,11 @@ export class UserService implements IUserService {
         throw new NotFoundError('User');
       }
 
-      // Non-admins cannot escalate privileges, change roles, or reassign between orgs/teams
-      const { isAdmin: _a, organizationId: _o, roleId: _r, teamId: _t, ...nonAdminFields } = input;
-      const safeInput: UpdateUserInput = actor.isAdmin ? input : nonAdminFields;
+      // Non-admins can only update their own profile fields; explicit allowlist prevents
+      // future additions to UpdateUserInput from inadvertently becoming accessible
+      const safeInput: UpdateUserInput = actor.isAdmin
+        ? input
+        : { email: input.email, name: input.name, password: input.password };
 
       if (safeInput.organizationId) {
         const org = await this.orgRepo.findById(safeInput.organizationId, tx);
@@ -146,6 +148,10 @@ export class UserService implements IUserService {
 
       if (!actor.isAdmin && before.organizationId !== actor.organizationId) {
         throw new NotFoundError('User');
+      }
+
+      if (before.id === actor.id) {
+        throw new ConflictError('Cannot delete your own account');
       }
 
       await this.userRepo.deleteById(id, tx);
