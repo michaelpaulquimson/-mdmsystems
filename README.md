@@ -1,6 +1,6 @@
 # MDM Systems — Admin App
 
-A full-stack MDM-style admin application built as a practical tech exam.
+A full-stack MDM-style admin application for managing organizations, teams, users, roles, and content — with a React Native companion app.
 
 ## What it does
 
@@ -37,13 +37,17 @@ Then open:
 - **API Docs (Swagger UI)** → http://localhost:4000/api/v1/docs
 - **Health check** → http://localhost:4000/health/ready
 
-## Default credentials
+## Test accounts
 
-| User               | Password      | Role   |
-| ------------------ | ------------- | ------ |
-| `admin@mdm.local`  | `admin123`    | Admin  |
-| `viewer@mdm.local` | `password123` | Viewer |
-| `editor@mdm.local` | `password123` | Editor |
+All seed users belong to **Acme Corp** org, **Engineering** team.
+
+| Email              | Password      | Role   | What they can do                                                 |
+| ------------------ | ------------- | ------ | ---------------------------------------------------------------- |
+| `admin@mdm.local`  | `admin123`    | Admin  | Full access — CRUD on all entities, audit log, all content       |
+| `editor@mdm.local` | `password123` | Editor | Read + create + edit + delete content only                       |
+| `viewer@mdm.local` | `password123` | Viewer | Read content only; has a pre-assigned content item (mobile demo) |
+
+> **Tip:** Log in as `admin`, then as `viewer`, then as `editor` to see RBAC enforcement in action. The sidebar and action buttons change per role. Non-admins cannot see Organizations, Teams, Users, or Roles pages.
 
 ## All make targets
 
@@ -126,6 +130,21 @@ See [`docs/SECURITY.md`](docs/SECURITY.md) for the OWASP Top 10 mapping and miti
 
 See [`docs/decisions/`](docs/decisions/) for ADRs explaining every major technology choice.
 
-## Phase 2 — React Native
+## Phase 2 — React Native (Expo)
 
-A bonus Expo screen (`mobile/`) will reuse `@mdm/shared` and the existing `GET /api/v1/content/assigned/:userId` endpoint. No backend changes needed.
+The `mobile/` workspace is a complete Expo app that reuses `@mdm/shared` and the same backend.
+
+**Screens:**
+
+- **Login** — authenticates with the same backend; access token stored in Zustand memory, refresh token in `expo-secure-store`
+- **Assigned Content** — calls `GET /api/v1/content/assigned/:userId`; renders a `FlatList`; profile card shows name · role · team · org
+
+**Run locally:**
+
+```bash
+cd mobile
+npm install
+npx expo start   # scan QR with Expo Go or run on simulator
+```
+
+Set `EXPO_PUBLIC_API_URL=http://<your-machine-ip>:4000/api/v1` in `mobile/.env` (simulator uses your host IP, not `localhost`).

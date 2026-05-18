@@ -1,4 +1,4 @@
-import type { ContentItem, CreateContentInput, UpdateContentInput, Paginated } from '@mdm/shared';
+import type { ContentItem, CreateContentInput, Paginated, UpdateContentInput } from '@mdm/shared';
 
 import { apiClient } from '@/shared/api/client';
 
@@ -13,7 +13,7 @@ export const contentApi = {
     apiClient.get<Paginated<ContentItem>>('/api/v1/content', { params }).then((r) => r.data),
 
   getAssigned: (userId: string) =>
-    apiClient.get<Paginated<ContentItem>>(`/api/v1/content/assigned/${userId}`).then((r) => r.data),
+    apiClient.get<ContentItem[]>(`/api/v1/content/assigned/${userId}`).then((r) => r.data),
 
   create: (data: CreateContentInput) =>
     apiClient.post<ContentItem>('/api/v1/content', data).then((r) => r.data),
