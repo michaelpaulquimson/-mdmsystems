@@ -31,23 +31,26 @@ const passwordSchema = z
   .regex(/\d/, 'Password must contain at least one number')
   .openapi({ example: 'Secur3Pass' });
 
-export const CreateUserSchema = z
-  .object({
-    email: z
-      .string()
-      .email()
-      .transform((v) => v.toLowerCase().trim())
-      .openapi({ example: 'newuser@mdm.local' }),
-    name: z.string().min(2).max(255).openapi({ example: 'New User' }),
-    password: passwordSchema,
-    isAdmin: z.boolean().default(false).openapi({ example: false }),
-    organizationId: z.string().uuid().nullable().optional().openapi({ example: null }),
-    teamId: z.string().uuid().nullable().optional().openapi({ example: null }),
-    roleId: z.string().uuid().nullable().optional().openapi({ example: null }),
-  })
-  .openapi({ description: 'Create user payload' });
+const CreateUserBaseSchema = z.object({
+  email: z
+    .string()
+    .email()
+    .transform((v) => v.toLowerCase().trim())
+    .openapi({ example: 'newuser@mdm.local' }),
+  name: z.string().min(2).max(255).openapi({ example: 'New User' }),
+  password: passwordSchema,
+  isAdmin: z.boolean().default(false).openapi({ example: false }),
+  organizationId: z.string().uuid().nullable().optional().openapi({ example: null }),
+  teamId: z.string().uuid().nullable().optional().openapi({ example: null }),
+  roleId: z.string().uuid().nullable().openapi({ example: null }),
+});
 
-export const UpdateUserSchema = CreateUserSchema.omit({ password: true })
+export const CreateUserSchema = CreateUserBaseSchema.refine((d) => d.isAdmin || d.roleId != null, {
+  message: 'Role is required for non-admin users',
+  path: ['roleId'],
+}).openapi({ description: 'Create user payload' });
+
+export const UpdateUserSchema = CreateUserBaseSchema.omit({ password: true })
   .extend({ password: passwordSchema.optional() })
   .partial()
   .openapi({ description: 'Update user payload (all fields optional)' });

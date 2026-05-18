@@ -25,8 +25,6 @@ export default function AssignedContentScreen(): ReactNode {
   // All hooks must run before any conditional returns (Rules of Hooks)
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
-  const accessToken = useAuthStore((s) => s.accessToken);
-  const refreshToken = useAuthStore((s) => s.refreshToken);
   const { mutate: doLogout, isPending: isLoggingOut } = useLogout();
   const hasOrg = Boolean(user?.organizationId);
   const [isCheckingOrg, setIsCheckingOrg] = useState(false);
@@ -35,6 +33,9 @@ export default function AssignedContentScreen(): ReactNode {
     setIsCheckingOrg(true);
     try {
       const { data: freshUser } = await apiClient.get<AuthUserWithProfile>('/auth/me');
+      // Read tokens from store state at call time (not render time) — the interceptor
+      // may have silently refreshed the access token while this request was in-flight
+      const { accessToken, refreshToken } = useAuthStore.getState();
       if (accessToken && refreshToken) {
         setAuth(accessToken, refreshToken, freshUser);
       }

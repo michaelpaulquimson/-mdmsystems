@@ -224,7 +224,25 @@ export class AuthService implements IAuthService {
   }
 
   async me(actor: AuthenticatedUser): Promise<MeResponse> {
-    const names = await this.userRepo.findNamesById(actor.id);
-    return { ...actor, ...names };
+    // Fetch live DB data — JWT claims can be stale (e.g. admin reassigned org/role since login)
+    const [user, permissions, names] = await Promise.all([
+      this.userRepo.findById(actor.id),
+      this.userRepo.findPermissionsForUser(actor.id),
+      this.userRepo.findNamesById(actor.id),
+    ]);
+
+    if (!user) throw new UnauthorizedError('User not found');
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+      organizationId: user.organizationId,
+      teamId: user.teamId,
+      roleId: user.roleId,
+      permissions,
+      ...names,
+    };
   }
 }

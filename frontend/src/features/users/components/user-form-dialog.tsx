@@ -59,7 +59,7 @@ export function UserFormDialog({
       isAdmin: user?.isAdmin ?? false,
       organizationId: user?.organizationId ?? undefined,
       teamId: user?.teamId ?? undefined,
-      roleId: user?.roleId ?? undefined,
+      roleId: user?.roleId ?? null,
     },
   });
 
@@ -73,7 +73,7 @@ export function UserFormDialog({
         isAdmin: user?.isAdmin ?? false,
         organizationId: user?.organizationId ?? undefined,
         teamId: user?.teamId ?? undefined,
-        roleId: user?.roleId ?? undefined,
+        roleId: user?.roleId ?? null,
       });
     }
   }, [open, user, reset]);
@@ -235,7 +235,10 @@ export function UserFormDialog({
 
         {/* Role */}
         <div className="space-y-1.5">
-          <Label htmlFor="user-role">Role</Label>
+          <Label htmlFor="user-role">
+            Role
+            {!watch('isAdmin') && <span className="ml-1 text-destructive">*</span>}
+          </Label>
           <Controller
             name="roleId"
             control={control}
@@ -251,7 +254,7 @@ export function UserFormDialog({
                   <SelectValue placeholder="Select role…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">— None —</SelectItem>
+                  {watch('isAdmin') && <SelectItem value="__none__">— None (admin) —</SelectItem>}
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.name}
