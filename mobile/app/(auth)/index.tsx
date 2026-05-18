@@ -1,8 +1,9 @@
 import { useRoles } from '@/features/roles/hooks/use-roles';
 import { useUsers } from '@/features/users/hooks/use-users';
-import { apiClient } from '@/shared/api/client';
+import { type ApiError, apiClient } from '@/shared/api/client';
 import { useAuthStore, type AuthUserWithProfile } from '@/shared/stores/auth.store';
 import type { ContentItem } from '@mdm/shared';
+import { ErrorCode } from '@mdm/shared';
 import { Stack } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import {
@@ -106,7 +107,7 @@ export default function AssignedContentScreen(): ReactNode {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#3b82f6" />
         </View>
-      ) : error ? (
+      ) : error && (error as ApiError).code !== ErrorCode.FORBIDDEN ? (
         <View style={styles.centered}>
           <Text style={styles.errorText}>Failed to load content. Pull down to retry.</Text>
         </View>
