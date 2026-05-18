@@ -23,7 +23,11 @@ export default function AssignedContentScreen(): ReactNode {
   // All hooks must run before any conditional returns (Rules of Hooks)
   const user = useAuthStore((s) => s.user);
   const { mutate: doLogout, isPending: isLoggingOut } = useLogout();
-  const { data, isLoading, error, refetch, isRefetching } = useAssignedContent(user?.id ?? '');
+  const hasOrg = Boolean(user?.organizationId);
+  const { data, isLoading, error, refetch, isRefetching } = useAssignedContent(
+    user?.id ?? '',
+    hasOrg,
+  );
   // /users and /roles are admin-only — skip the calls for non-admins to avoid 403s
   const isAdmin = user?.isAdmin ?? false;
   const { data: users } = useUsers(isAdmin);
@@ -65,7 +69,13 @@ export default function AssignedContentScreen(): ReactNode {
         }}
       />
 
-      {isLoading ? (
+      {!hasOrg ? (
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>
+            No organization assigned to your account.{'\n'}Contact your administrator.
+          </Text>
+        </View>
+      ) : isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#3b82f6" />
         </View>
