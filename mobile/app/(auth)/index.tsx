@@ -1,13 +1,15 @@
 import { useRoles } from '@/features/roles/hooks/use-roles';
 import { useUsers } from '@/features/users/hooks/use-users';
+import { apiClient } from '@/shared/api/client';
 import { useAuthStore, type AuthUserWithProfile } from '@/shared/stores/auth.store';
 import type { ContentItem } from '@mdm/shared';
 import { Stack } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,8 +24,26 @@ type UserInfo = { name: string; roleName: string | null };
 export default function AssignedContentScreen(): ReactNode {
   // All hooks must run before any conditional returns (Rules of Hooks)
   const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
   const { mutate: doLogout, isPending: isLoggingOut } = useLogout();
   const hasOrg = Boolean(user?.organizationId);
+  const [isCheckingOrg, setIsCheckingOrg] = useState(false);
+
+  const checkOrgAssignment = async () => {
+    setIsCheckingOrg(true);
+    try {
+      const { data: freshUser } = await apiClient.get<AuthUserWithProfile>('/auth/me');
+      if (accessToken && refreshToken) {
+        setAuth(accessToken, refreshToken, freshUser);
+      }
+    } catch {
+      // Silently ignore — user stays logged in, check again later
+    } finally {
+      setIsCheckingOrg(false);
+    }
+  };
   const { data, isLoading, error, refetch, isRefetching } = useAssignedContent(
     user?.id ?? '',
     hasOrg,
@@ -70,11 +90,17 @@ export default function AssignedContentScreen(): ReactNode {
       />
 
       {!hasOrg ? (
-        <View style={styles.centered}>
+        <ScrollView
+          contentContainerStyle={styles.centered}
+          refreshControl={
+            <RefreshControl refreshing={isCheckingOrg} onRefresh={checkOrgAssignment} />
+          }
+        >
           <Text style={styles.errorText}>
             No organization assigned to your account.{'\n'}Contact your administrator.
           </Text>
-        </View>
+          <Text style={styles.hintText}>Pull down to check again.</Text>
+        </ScrollView>
       ) : isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#3b82f6" />
@@ -148,7 +174,8 @@ function ContentCard({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
+  hintText: { fontSize: 12, color: '#aaa', marginTop: 8, textAlign: 'center' },
   fillFlex: { flex: 1 },
   listPadding: { paddingVertical: 12 },
   logoutBtn: { marginRight: 4, paddingHorizontal: 4, paddingVertical: 2 },
