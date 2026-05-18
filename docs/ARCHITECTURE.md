@@ -10,7 +10,7 @@ mdmsystems/
 ├── backend/   Node 22 + Express + TypeScript REST API — port 4000
 ├── frontend/  React 18 + Vite + Tailwind + shadcn/ui — port 5173
 ├── e2e/       Playwright golden-path tests
-└── mobile/    Phase 2 (Expo — not yet built)
+└── mobile/    Expo (React Native) — login + assigned-content screen
 ```
 
 ---
@@ -97,7 +97,7 @@ tests/
 
 ## Shared Package (`@mdm/shared`)
 
-Single source of truth imported by backend, frontend, and (eventually) mobile:
+Single source of truth imported by backend, frontend, and mobile:
 
 | Export                                                            | Used by                                                    |
 | ----------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -142,7 +142,8 @@ refresh_tokens (user_id → users)
 - JWT, signed `HS256` with `JWT_SECRET`
 - 15-minute expiry
 - Carried in `Authorization: Bearer` header (never cookies — structurally immune to CSRF)
-- Payload: `{ sub: userId, email, name, isAdmin, organizationId, teamId, roleId, permissions }`
+- Payload: `{ id, email, name, isAdmin, organizationId, teamId, roleId, permissions }`
+- `GET /auth/me` returns the JWT fields plus `orgName`, `teamName`, `roleName` (resolved via JOIN)
 
 ### Refresh tokens
 
@@ -168,7 +169,7 @@ Every mutating service method writes an `audit_log` row **inside the same `withT
 ```
 audit_log
 ├── actor_user_id   — who performed the action
-├── action          — 'create' | 'update' | 'delete' | 'login' | 'logout'
+├── action          — 'create' | 'update' | 'delete' | 'login' | 'logout' | 'token-refreshed' | 'refresh-reuse-detected'
 ├── entity_type     — 'organization' | 'team' | 'user' | 'role' | 'content_item'
 ├── entity_id       — the affected row's UUID
 ├── organization_id — the org context (null for org-delete events)
@@ -247,6 +248,25 @@ Nothing outside this file calls `new` on a repository, service, or controller. T
 - Error envelope: `{ error: { code: ErrorCode, message: string, details? } }`
 - ISO 8601 datetimes in/out everywhere
 - No trailing slashes on routes
+
+---
+
+## Technology Decisions Summary
+
+## Mobile App (Expo)
+
+`mobile/` is a React Native Expo application that reuses `@mdm/shared` and the same backend endpoints.
+
+**What it covers:**
+
+- Login screen with JWT auth (access token in Zustand memory, refresh token in `expo-secure-store`)
+- Assigned-content screen: calls `GET /api/v1/content/assigned/:userId`, renders a `FlatList`
+- Profile card showing the logged-in user's name, role, team, and org (from `/auth/me`)
+- Roles and users data fetched **only when `isAdmin = true`** (non-admins get 403 on those admin-only endpoints)
+- Token refresh de-duplicated via a shared `refreshPromise` in the axios client
+- Same `@mdm/shared` zod schemas and `Permissions` constants as web
+
+**Token storage rule:** JWTs are stored in `expo-secure-store` (OS Keychain / Keystore), never `AsyncStorage`.
 
 ---
 

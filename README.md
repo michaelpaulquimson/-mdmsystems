@@ -126,6 +126,21 @@ See [`docs/SECURITY.md`](docs/SECURITY.md) for the OWASP Top 10 mapping and miti
 
 See [`docs/decisions/`](docs/decisions/) for ADRs explaining every major technology choice.
 
-## Phase 2 — React Native
+## Phase 2 — React Native (Expo)
 
-A bonus Expo screen (`mobile/`) will reuse `@mdm/shared` and the existing `GET /api/v1/content/assigned/:userId` endpoint. No backend changes needed.
+The `mobile/` workspace is a complete Expo app that reuses `@mdm/shared` and the same backend.
+
+**Screens:**
+
+- **Login** — authenticates with the same backend; access token stored in Zustand memory, refresh token in `expo-secure-store`
+- **Assigned Content** — calls `GET /api/v1/content/assigned/:userId`; renders a `FlatList`; profile card shows name · role · team · org
+
+**Run locally:**
+
+```bash
+cd mobile
+npm install
+npx expo start   # scan QR with Expo Go or run on simulator
+```
+
+Set `EXPO_PUBLIC_API_URL=http://<your-machine-ip>:4000/api/v1` in `mobile/.env` (simulator uses your host IP, not `localhost`).
