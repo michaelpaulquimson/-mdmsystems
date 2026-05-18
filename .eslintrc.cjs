@@ -51,6 +51,9 @@ module.exports = {
     // CommonJS-interop default imports (e.g. jsonwebtoken, bcrypt) are commonly used
     // as namespace objects; named-as-default-member is a style nit, not a bug.
     'import/no-named-as-default-member': 'off',
+    // bcrypt and jsonwebtoken are CJS-only packages whose @types don't declare a default
+    // export, but esModuleInterop makes the default import work correctly at runtime.
+    'import/default': 'off',
     'boundaries/element-types': [
       'error',
       {

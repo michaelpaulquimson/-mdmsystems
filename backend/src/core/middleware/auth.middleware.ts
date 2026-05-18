@@ -1,6 +1,6 @@
 import { AuthUserSchema } from '@mdm/shared';
 import type { NextFunction, Request, Response } from 'express';
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
 import { env } from '../config/env.js';
@@ -18,7 +18,7 @@ export function authRequired(req: Request, _res: Response, next: NextFunction): 
 
   try {
     const token = header.slice(7);
-    const raw = verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
+    const raw = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
     const parsed = JwtPayloadSchema.parse(raw);
     req.user = parsed;
     next();

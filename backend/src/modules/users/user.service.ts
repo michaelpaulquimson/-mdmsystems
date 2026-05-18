@@ -6,7 +6,7 @@ import type {
   UpdateUserInput,
   User,
 } from '@mdm/shared';
-import { hash } from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 import type { IUserRepository } from './user.repository.js';
 import { env } from '../../core/config/env.js';
@@ -66,7 +66,7 @@ export class UserService implements IUserService {
         if (!role) throw new NotFoundError('Role');
       }
 
-      const passwordHash = await hash(input.password, env.BCRYPT_ROUNDS);
+      const passwordHash = await bcrypt.hash(input.password, env.BCRYPT_ROUNDS);
       const user = await this.userRepo.create({ ...input, passwordHash }, tx);
 
       await this.auditService.record(
@@ -118,7 +118,7 @@ export class UserService implements IUserService {
 
       const updatePayload: typeof updateFields & { passwordHash?: string } = { ...updateFields };
       if (safeInput.password) {
-        updatePayload.passwordHash = await hash(safeInput.password, env.BCRYPT_ROUNDS);
+        updatePayload.passwordHash = await bcrypt.hash(safeInput.password, env.BCRYPT_ROUNDS);
       }
 
       const user = await this.userRepo.update(id, updatePayload, tx);
