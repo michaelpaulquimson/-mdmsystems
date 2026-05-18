@@ -71,7 +71,7 @@ export function AppShell(): JSX.Element {
         {/* Logo / brand */}
         <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <LayoutDashboard className="h-5 w-5 text-primary" />
-          <span className="text-base font-semibold tracking-tight">MDM Admin</span>
+          <span className="text-base font-semibold tracking-tight">MDM Systems</span>
         </div>
 
         {/* Navigation */}
@@ -100,6 +100,15 @@ export function AppShell(): JSX.Element {
           <div className="mb-2 px-3">
             <p className="truncate text-sm font-medium">{user?.name ?? 'Unknown'}</p>
             <p className="truncate text-xs text-muted-foreground">{user?.email ?? ''}</p>
+            {user?.roleName && (
+              <p className="truncate text-xs text-muted-foreground">{user.roleName}</p>
+            )}
+            {user?.teamName && (
+              <p className="truncate text-xs text-muted-foreground">{user.teamName}</p>
+            )}
+            {user?.orgName && (
+              <p className="truncate text-xs text-muted-foreground">{user.orgName}</p>
+            )}
             {isAdmin && (
               <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                 Admin

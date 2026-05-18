@@ -1,4 +1,4 @@
-.PHONY: help up down logs migrate seed reset-db test test-int e2e audit typecheck lint clean
+.PHONY: help up down logs migrate seed reset-db test test-int e2e audit typecheck lint clean mobile
 
 help: ## List all available make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -49,6 +49,9 @@ typecheck: ## Run tsc --noEmit across all workspaces
 
 lint: ## Run ESLint across all workspaces
 	npm run lint
+
+mobile: ## Start the Expo dev server for React Native (requires Expo Go or a simulator)
+	npm start -w mobile
 
 clean: ## Remove node_modules, dist, and coverage directories
 	find . -name "node_modules" -type d -not -path "*/.git/*" -prune -exec rm -rf '{}' +

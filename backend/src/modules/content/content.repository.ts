@@ -124,18 +124,20 @@ export class ContentRepository
     client?: PoolClient,
   ): Promise<ContentItem[]> {
     const db = client ?? this.pool;
-    const conditions = ['assigned_to_user_id = $1'];
-    const params: unknown[] = [userId];
-    let idx = 2;
+    const params: unknown[] = [userId, userId];
+    let idx = 3;
+    let orgFilter = '';
 
     if (organizationId) {
-      conditions.push(`organization_id = $${idx++}`);
+      orgFilter = `AND organization_id = $${idx++}`;
       params.push(organizationId);
     }
 
-    const where = `WHERE ${conditions.join(' AND ')}`;
     const { rows } = await db.query(
-      `SELECT * FROM ${this.table} ${where} ORDER BY created_at DESC`,
+      `SELECT * FROM ${this.table}
+       WHERE (assigned_to_user_id = $1 OR created_by_user_id = $2)
+       ${orgFilter}
+       ORDER BY created_at DESC`,
       params,
     );
     return rows.map((r) => this.parseRow(r));

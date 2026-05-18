@@ -279,22 +279,22 @@ describe('AuthService', () => {
 
       await service.logout(FAKE_RAW_TOKEN, actor, ctx);
 
-      expect(refreshTokenRepo.revoke).toHaveBeenCalledWith(tokenRow.id);
+      expect(refreshTokenRepo.revoke).toHaveBeenCalledWith(tokenRow.id, expect.anything());
       expect(auditService.record).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'logout', entityType: 'user', entityId: actor.id }),
+        expect.anything(),
       );
     });
 
-    it('skips revoke when token row not found but still records audit', async () => {
+    it('skips revoke and audit when token row not found', async () => {
       const actor = makeAuthUser();
       vi.mocked(refreshTokenRepo.findByHash).mockResolvedValue(null);
 
       await service.logout('unknown-token', actor, ctx);
 
       expect(refreshTokenRepo.revoke).not.toHaveBeenCalled();
-      expect(auditService.record).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'logout' }),
-      );
+      // No token found → no audit row (nothing to revoke, nothing to record)
+      expect(auditService.record).not.toHaveBeenCalled();
     });
   });
 });

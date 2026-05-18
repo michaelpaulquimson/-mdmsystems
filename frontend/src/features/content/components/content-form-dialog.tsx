@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
 import { useUsers } from '@/features/users/hooks/use-users';
+import { useAuth } from '@/shared/auth/use-auth';
 import { FormDialog } from '@/shared/components/form-dialog/form-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -66,7 +67,9 @@ export function ContentFormDialog({
     }
   }, [open, contentItem, reset]);
 
-  const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 200 });
+  const { isAdmin } = useAuth();
+  // /users is admin-only; only fetch when dialog is open and user is admin
+  const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 200 }, open && isAdmin);
   const users = usersData?.data ?? [];
 
   const createMutation = useCreateContent();

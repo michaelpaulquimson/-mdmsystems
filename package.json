@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "packageManager": "npm@10.9.2",
@@ -11,8 +11,7 @@
     "shared",
     "backend",
     "frontend",
-    "e2e",
-    "mobile"
+    "e2e"
   ],
   "scripts": {
     "test": "npm run test:unit --workspaces --if-present",

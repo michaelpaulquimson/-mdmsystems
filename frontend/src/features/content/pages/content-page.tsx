@@ -4,8 +4,10 @@ import { Plus, Pencil, Trash2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
+import { useRoles } from '@/features/roles/hooks/use-roles';
 import { useUsers } from '@/features/users/hooks/use-users';
 import { Gate } from '@/shared/auth/gate';
+import { useAuth } from '@/shared/auth/use-auth';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog/confirm-dialog';
 import { DataTable, type ColumnDef } from '@/shared/components/data-table/data-table';
 import { Button } from '@/shared/components/ui/button';
@@ -33,8 +35,16 @@ export function ContentPage(): JSX.Element {
     offset: (page - 1) * PAGE_SIZE,
   });
 
-  const { data: usersData } = useUsers({ limit: 200 });
-  const userMap = new Map((usersData?.data ?? []).map((u) => [u.id, u.name]));
+  const { isAdmin } = useAuth();
+  const { data: usersData } = useUsers({ limit: 200 }, isAdmin);
+  const { data: rolesData } = useRoles({ limit: 200 }, isAdmin);
+  const roleMap = new Map((rolesData?.data ?? []).map((r) => [r.id, r.name]));
+  const userMap = new Map(
+    (usersData?.data ?? []).map((u) => [
+      u.id,
+      { name: u.name, roleName: u.roleId ? (roleMap.get(u.roleId) ?? null) : null },
+    ]),
+  );
 
   const deleteMutation = useDeleteContent();
 
@@ -60,12 +70,30 @@ export function ContentPage(): JSX.Element {
     {
       key: 'assignedTo',
       header: 'Assigned To',
-      cell: (row): ReactNode =>
-        row.assignedToUserId ? (
-          <span className="text-sm">{userMap.get(row.assignedToUserId) ?? '—'}</span>
-        ) : (
-          <span className="text-sm text-muted-foreground italic">Unassigned</span>
-        ),
+      cell: (row): ReactNode => {
+        const info = row.assignedToUserId ? userMap.get(row.assignedToUserId) : null;
+        if (!info) return <span className="text-sm text-muted-foreground italic">Unassigned</span>;
+        return (
+          <span className="text-sm">
+            {info.name}
+            {info.roleName && <span className="ml-1 text-muted-foreground">· {info.roleName}</span>}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'createdBy',
+      header: 'Created By',
+      cell: (row): ReactNode => {
+        const info = row.createdByUserId ? userMap.get(row.createdByUserId) : null;
+        if (!info) return <span className="text-sm text-muted-foreground italic">—</span>;
+        return (
+          <span className="text-sm">
+            {info.name}
+            {info.roleName && <span className="ml-1 text-muted-foreground">· {info.roleName}</span>}
+          </span>
+        );
+      },
     },
     {
       key: 'createdAt',

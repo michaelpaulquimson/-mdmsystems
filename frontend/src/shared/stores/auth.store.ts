@@ -4,6 +4,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface AuthUserWithPermissions extends AuthUser {
   permissions?: string[];
+  orgName?: string | null;
+  teamName?: string | null;
+  roleName?: string | null;
 }
 
 interface AuthState {

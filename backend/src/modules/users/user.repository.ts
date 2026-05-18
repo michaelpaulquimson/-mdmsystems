@@ -27,12 +27,19 @@ export interface UserListFilters extends ListFilters {
   organizationId?: string;
 }
 
+export interface UserNames {
+  orgName: string | null;
+  teamName: string | null;
+  roleName: string | null;
+}
+
 export interface IUserRepository {
   findById(id: string, client?: PoolClient): Promise<User | null>;
   findAll(filters: UserListFilters, client?: PoolClient): Promise<Paginated<User>>;
   findByEmail(email: string, client?: PoolClient): Promise<User | null>;
   findByEmailWithPasswordHash(email: string, client?: PoolClient): Promise<UserWithHash | null>;
   findPermissionsForUser(userId: string, client?: PoolClient): Promise<string[]>;
+  findNamesById(userId: string, client?: PoolClient): Promise<UserNames>;
   getEmailById(userId: string, client?: PoolClient): Promise<string | null>;
   create(input: CreateUserInput & { passwordHash: string }, client?: PoolClient): Promise<User>;
   update(
@@ -141,6 +148,28 @@ export class UserRepository extends BaseRepository<User, UserRow> implements IUs
     return rows[0]?.email ?? null;
   }
 
+  async findNamesById(userId: string, client?: PoolClient): Promise<UserNames> {
+    const db = client ?? this.pool;
+    const { rows } = await db.query<{
+      org_name: string | null;
+      team_name: string | null;
+      role_name: string | null;
+    }>(
+      `SELECT o.name AS org_name, t.name AS team_name, r.name AS role_name
+       FROM users u
+       LEFT JOIN organizations o ON o.id = u.organization_id
+       LEFT JOIN teams t ON t.id = u.team_id
+       LEFT JOIN roles r ON r.id = u.role_id
+       WHERE u.id = $1`,
+      [userId],
+    );
+    return {
+      orgName: rows[0]?.org_name ?? null,
+      teamName: rows[0]?.team_name ?? null,
+      roleName: rows[0]?.role_name ?? null,
+    };
+  }
+
   async create(
     input: CreateUserInput & { passwordHash: string },
     client?: PoolClient,
@@ -190,7 +219,7 @@ export class UserRepository extends BaseRepository<User, UserRow> implements IUs
     const fields = Object.entries(input).filter(([key, v]) => v !== undefined && key in fieldMap);
     if (fields.length === 0) return this.findById(id, client);
 
-    const setClauses = fields.map(([key], i) => `${fieldMap[key]} = $${i + 1}`);
+    const setClauses = fields.map(([key], i) => `${fieldMap[key]!} = $${i + 1}`);
     const values = fields.map(([, v]) => v);
     values.push(id);
 

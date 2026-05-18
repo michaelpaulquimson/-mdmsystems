@@ -38,3 +38,7 @@ test-results/
 
 # Compiled shared (workspaces link the src directly in dev)
 shared/dist/
+
+# Expo / React Native
+.expo/
+mobile/.expo/

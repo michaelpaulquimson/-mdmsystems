@@ -22,7 +22,7 @@ A full-stack MDM-style admin application built as a practical tech exam.
 ## Prerequisites
 
 - Docker + Docker Compose
-- Node 20+ (only needed if running workspaces outside Docker)
+- Node 22+ (only needed if running workspaces outside Docker; use `.nvmrc` — `nvm use`)
 
 ## Quickstart
 

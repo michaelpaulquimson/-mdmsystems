@@ -7,6 +7,7 @@ import * as jwt from 'jsonwebtoken';
 import type { IRefreshTokenRepository } from './refresh-token.repository.js';
 import { env } from '../../core/config/env.js';
 import { UnauthorizedError } from '../../core/errors/http-errors.js';
+import type { AuthenticatedUser } from '../../core/types/express.js';
 import type { AuditService } from '../audit/audit.service.js';
 import type { IUserRepository } from '../users/user.repository.js';
 
@@ -17,6 +18,12 @@ interface LoginContext {
 
 type TokenPayload = AuthUser & { permissions: string[] };
 
+export type MeResponse = AuthenticatedUser & {
+  orgName: string | null;
+  teamName: string | null;
+  roleName: string | null;
+};
+
 export interface IAuthService {
   login(input: LoginInput, ctx: LoginContext): Promise<AuthResponse>;
   refresh(
@@ -24,7 +31,7 @@ export interface IAuthService {
     ctx: LoginContext,
   ): Promise<{ accessToken: string; refreshToken: string }>;
   logout(refreshToken: string, actor: AuthUser, ctx: LoginContext): Promise<void>;
-  me(actor: AuthUser): Promise<AuthUser>;
+  me(actor: AuthenticatedUser): Promise<MeResponse>;
 }
 
 function hashToken(raw: string): string {
@@ -71,22 +78,31 @@ export class AuthService implements IAuthService {
     const payload = buildTokenPayload(user, permissions);
     const accessToken = signAccessToken(payload);
 
-    const refreshToken = await this.refreshTokenRepo.create({
-      userId: user.id,
-      ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
-      ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
-    });
-
-    await this.auditService.record({
-      actorUserId: user.id,
-      action: 'login',
-      entityType: 'user',
-      entityId: user.id,
-      organizationId: user.organizationId,
-      before: null,
-      after: null,
-      ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
-      ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
+    // Refresh token creation and audit must commit together or roll back together.
+    const refreshToken = await this.userRepo.withTransaction(async (tx) => {
+      const raw = await this.refreshTokenRepo.create(
+        {
+          userId: user.id,
+          ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
+          ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
+        },
+        tx,
+      );
+      await this.auditService.record(
+        {
+          actorUserId: user.id,
+          action: 'login',
+          entityType: 'user',
+          entityId: user.id,
+          organizationId: user.organizationId,
+          before: null,
+          after: null,
+          ...(ctx.ip !== undefined && { ipAddress: ctx.ip }),
+          ...(ctx.userAgent !== undefined && { userAgent: ctx.userAgent }),
+        },
+        tx,
+      );
+      return raw;
     });
 
     return { accessToken, refreshToken, user };
@@ -146,9 +162,10 @@ export class AuthService implements IAuthService {
       // Record the replacement chain
       const newHash = hashToken(newRawToken);
       const newTokenRow = await this.refreshTokenRepo.findByHash(newHash, tx);
-      if (newTokenRow) {
-        await this.refreshTokenRepo.setReplacedBy(tokenRow.id, newTokenRow.id, tx);
+      if (!newTokenRow) {
+        throw new UnauthorizedError('Invalid refresh token');
       }
+      await this.refreshTokenRepo.setReplacedBy(tokenRow.id, newTokenRow.id, tx);
 
       // Build new access token
       const userRecord = await this.userRepo.findById(tokenRow.user_id, tx);
@@ -206,7 +223,8 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async me(actor: AuthUser): Promise<AuthUser> {
-    return actor;
+  async me(actor: AuthenticatedUser): Promise<MeResponse> {
+    const names = await this.userRepo.findNamesById(actor.id);
+    return { ...actor, ...names };
   }
 }

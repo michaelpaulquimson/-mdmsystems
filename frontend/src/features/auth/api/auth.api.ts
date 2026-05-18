@@ -27,5 +27,6 @@ export const authApi = {
 
   logout: (refreshToken: string) => apiClient.post('/api/v1/auth/logout', { refreshToken }),
 
-  me: () => apiClient.get<AuthUser>('/api/v1/auth/me').then((r) => r.data),
+  me: () =>
+    apiClient.get<AuthUser & { permissions?: string[] }>('/api/v1/auth/me').then((r) => r.data),
 };

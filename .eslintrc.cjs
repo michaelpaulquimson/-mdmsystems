@@ -5,7 +5,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: ['./shared/tsconfig.json', './backend/tsconfig.json', './backend/tsconfig.test.json', './frontend/tsconfig.json', './e2e/tsconfig.json'],
+    project: ['./shared/tsconfig.json', './shared/tsconfig.test.json', './backend/tsconfig.json', './backend/tsconfig.test.json', './frontend/tsconfig.json', './e2e/tsconfig.json'],
   },
   plugins: ['@typescript-eslint', 'import', 'boundaries'],
   extends: [
@@ -48,6 +48,9 @@ module.exports = {
     ],
     'import/no-default-export': 'error',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
+    // CommonJS-interop default imports (e.g. jsonwebtoken, bcrypt) are commonly used
+    // as namespace objects; named-as-default-member is a style nit, not a bug.
+    'import/no-named-as-default-member': 'off',
     'boundaries/element-types': [
       'error',
       {
@@ -94,6 +97,16 @@ module.exports = {
         'import/no-default-export': 'off',
       },
     },
+    {
+      // Mobile workspace: Expo Router requires default exports; TypeScript
+      // handles module resolution for @/ aliases so skip import/no-unresolved.
+      files: ['mobile/**/*.ts', 'mobile/**/*.tsx'],
+      rules: {
+        'import/no-default-export': 'off',
+        'import/no-unresolved': 'off',
+        'boundaries/element-types': 'off',
+      },
+    },
   ],
-  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', '*.js', 'vite.config.ts', 'tailwind.config.*'],
+  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', '*.js', 'vite.config.ts', 'tailwind.config.*', 'mobile/'],
 };

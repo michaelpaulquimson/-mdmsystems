@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { env } from '@/shared/config/env';
 import { useAuthStore, type AuthUserWithPermissions } from '@/shared/stores/auth.store';
@@ -15,6 +15,9 @@ interface RefreshResponse {
 
 export function AuthBootstrap({ children }: AuthBootstrapProps): ReactNode {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  // Guard against React 18 Strict Mode double-invoke: the first run rotates the refresh
+  // token; a second run would try to exchange the already-spent token and clear auth.
+  const bootstrapped = useRef(false);
 
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -22,6 +25,9 @@ export function AuthBootstrap({ children }: AuthBootstrapProps): ReactNode {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
+    if (bootstrapped.current) return;
+    bootstrapped.current = true;
+
     async function bootstrap(): Promise<void> {
       // If we already have an accessToken in memory, nothing to do
       if (accessToken) {
