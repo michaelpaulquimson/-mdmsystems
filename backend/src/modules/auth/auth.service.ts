@@ -1,8 +1,8 @@
 import { createHash } from 'crypto';
 
 import type { AuthResponse, AuthUser, LoginInput, RefreshInput } from '@mdm/shared';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+import { compare } from 'bcrypt';
+import { sign } from 'jsonwebtoken';
 
 import type { IRefreshTokenRepository } from './refresh-token.repository.js';
 import { env } from '../../core/config/env.js';
@@ -52,7 +52,7 @@ function buildTokenPayload(user: AuthUser, permissions: string[]): TokenPayload 
 }
 
 function signAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '15m' });
+  return sign(payload, env.JWT_SECRET, { expiresIn: '15m' });
 }
 
 export class AuthService implements IAuthService {
@@ -69,7 +69,7 @@ export class AuthService implements IAuthService {
     }
 
     const { passwordHash, ...user } = userWithHash;
-    const match = await bcrypt.compare(input.password, passwordHash);
+    const match = await compare(input.password, passwordHash);
     if (!match) {
       throw new UnauthorizedError('Invalid credentials');
     }
