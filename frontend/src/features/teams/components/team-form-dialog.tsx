@@ -116,6 +116,11 @@ export function TeamFormDialog({
                   <SelectValue placeholder="Select organization…" />
                 </SelectTrigger>
                 <SelectContent>
+                  {!orgsLoading && organizations.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No organizations found — create one first.
+                    </div>
+                  )}
                   {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}

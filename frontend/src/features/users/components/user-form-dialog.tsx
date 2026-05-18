@@ -221,6 +221,11 @@ export function UserFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— None —</SelectItem>
+                  {!teamsLoading && selectedOrgId && teams.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No teams in this organization yet.
+                    </div>
+                  )}
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
@@ -255,6 +260,11 @@ export function UserFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {watch('isAdmin') && <SelectItem value="__none__">— None (admin) —</SelectItem>}
+                  {!rolesLoading && roles.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No roles found — create a role first.
+                    </div>
+                  )}
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.name}
